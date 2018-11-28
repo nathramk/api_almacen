@@ -2,8 +2,9 @@ from flask import Flask
 from flask_restful import Resource, Api
 from flask_jwt_extended import JWTManager
 from resources.user import UserRegister, UserLogin
-from resources.product import ProductListOne, RegisterProduct, ProductoList, ProductEnd
+from resources.product import ProductListOne, RegisterProduct, ProductoList, ProductEnd, ProductPoracAbarce
 from resources.entradas import RegistrarEntradas, EntradaGet, EntradasList
+from resources.stock import RegistarStock,ListEstock
 
 
 app = Flask(__name__)
@@ -28,6 +29,9 @@ api.add_resource(ProductEnd, '/productoVencidos')
 api.add_resource(RegistrarEntradas, '/entrada')
 api.add_resource(EntradaGet, '/entrada/<int:entrada_id>')
 api.add_resource(EntradasList, '/entradas')
+api.add_resource(RegistarStock,'/estock')
+api.add_resource(ListEstock, '/stocks')
+api.add_resource(ProductPoracAbarce, '/ProductPoracAbarce')
 
 
 if __name__=='__main__':
