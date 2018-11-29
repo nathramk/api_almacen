@@ -1,6 +1,11 @@
 from models.entradas import EntradasModel
 from flask_restful import Resource, reqparse
 _entrada_parser = reqparse.RequestParser()
+from flask_jwt_extended import (
+    jwt_required,
+    jwt_optional, 
+    get_jwt_identity
+)
 
 _entrada_parser.add_argument('detalle',
     type=str,
@@ -9,6 +14,7 @@ _entrada_parser.add_argument('detalle',
 )
 
 class RegistrarEntradas(Resource):
+    @jwt_required
     def post(self):
         data = _entrada_parser.parse_args()
         #if EntradasModel.find_by_id.
@@ -22,6 +28,7 @@ class RegistrarEntradas(Resource):
         return entrada.json(),201
 
 class EntradaGet(Resource):
+    @jwt_required
     @classmethod
     def get(cls, entrada_id):
         entrada = EntradasModel.find_by_id(entrada_id)
@@ -32,6 +39,7 @@ class EntradaGet(Resource):
 
 
 class EntradasList(Resource):
+    @jwt_required
     def get(self):
         entrada = [x.json() for x in EntradasModel.find_all()]
         return {'entradas': entrada}

@@ -1,10 +1,16 @@
 from models.product import ProductModel
 from flask_restful import Resource, reqparse
 import datetime as dt 
+from datetime import datetime
 
 import time
 from models.entradas import EntradasModel
 from models.stock import StockModel
+from flask_jwt_extended import (
+    jwt_required,
+    jwt_optional, 
+    get_jwt_identity
+    )
 #from models.salida import SalidaModel
 
 _product_parse = reqparse.RequestParser()
@@ -62,21 +68,13 @@ _product_parse.add_argument('entrada_id',
 )
 
 class RegisterProduct(Resource):
+    @jwt_required
     def post(self):
         request_data = _product_parse.parse_args()
         #print("sadad: {}".format(request_data))
         #if ProductModel.find_by_nameproduct(request_data['nombre_producto']):
         #    return {"message": "el producto '{}' ya existe".format(request_data['nombre_producto'])}, 400
-        #z = request_data["price_entrada"]+300
-        #print("[0]::::: {}".format(request_data["nombre_producto"])) 
-        #print("[1]::::: {}".format(request_data["fecha_vencimiento"]))
-        #print("[2]::::: {}".format(request_data["cantidad"]))
-        #print("[3]::::: {}".format(request_data["detalle_cantidad"]))
-        #print("[4]::::: {}".format(request_data["unidad"]))
-        #print("[5]::::: {}".format(request_data["detalle_unidad"]))
-        #print("[6]::::: {}".format(z))
-        #print("[7]::::: {}".format(request_data["price_salida"]))
-        #print("[8]::::: {}".format(request_data["entrada_id"]))
+        
 
         psearch_if = [g.json() for g in ProductModel.find_all()]
         product = ProductModel.find_by_nameproduct(request_data['nombre_producto'])
@@ -84,10 +82,18 @@ class RegisterProduct(Resource):
             #req = ProductModel.fin_by_pricesalid(request_data['nombre_producto'], request_data['price_salida'])
             
             aaa = product.json()['cantidad']
+            bbb = product.json()['unidad']
             iddddd = product.json()['id']
             print("resss: {}".format(iddddd))
             product.cantidad = request_data['cantidad'] + aaa
-            #stock = StockModel(request_data["cantidad"], request_data["detalle_unidad"], request_data['price_salida'], request_data["entrada_id"])
+            product.unidad = request_data['unidad'] + bbb
+            
+            #tipo_medicamento = ["analgecicos", "antiacidos", "antiulcerosos", "antialergicos", "laxantes", "antiinecciosos", "antiinflamatorios", "Antipiréticos", "Antitusivos", "mucolíticos"]
+
+            #------if request_data[tipo_medicamento] = tipo_medicamento["analgesico"]:
+            #------    product.unidad = request_data['cantidad']*200
+
+            #stock = StockModel(request_data["cantidad"], request_data["detalle_unidad"], request_data['price_salida'], product.json()['cantidad'])
 
         else:
             product = ProductModel(**request_data)
@@ -115,6 +121,7 @@ class RegisterProduct(Resource):
 
 
 class ProductListOne(Resource):
+    @jwt_required
     def get(self, nombre_producto):
         producto = ProductModel.find_by_nameproduct(nombre_producto)
         if producto:
@@ -122,11 +129,20 @@ class ProductListOne(Resource):
         else:
             return {'message':'no se pudo encontrar el producto'}, 404
 
+
 class ProductoList(Resource):
+    @jwt_optional
     def get(self):
-        producto = [x.json() for x in ProductModel.find_all()]
-        return {'productos':producto}
+        #producto = [x.json() for x in ProductModel.find_all()]
+        #return {'productos':producto}
+        user_id = get_jwt_identity()
+        productos = [x.json() for x in ProductModel.find_all()]
+        if user_id:
+            return {"productos":productos},200
+        return {'prouctos':[producto['nombre_producto'] for producto in productos], 'message':'mode data available if you login'}
+
 class ProductPoracAbarce(Resource):
+    @jwt_required
     def get(self):
 
         producto = [x.json() for x in ProductModel.find_all()]
@@ -151,6 +167,7 @@ class ProductPoracAbarce(Resource):
 
 
 class ProductEnd(Resource):
+    @jwt_required
     def get(self):
         times = time.strftime("%Y-%m-%d")
         producto = [x.json() for x in ProductModel.find_all()]
@@ -169,7 +186,43 @@ class ProductEnd(Resource):
             tt = ProductModel.find_by_date(i)
             a.append(tt.json())
         return {"productos":a}
+    
+class ProductPorVender(Resource):
+    def get(self):
 
+        formato_fecha = "%Y-%m-%d"
+        times = time.strftime(formato_fecha)
+        producto = [x.json() for x in ProductModel.find_all()]
+        fechas = [x['fecha_vencimiento'] for x in producto]
+        
+        variable = [x for x in fechas]
+        ss = datetime.strptime(variable[0], formato_fecha)
+        sd = datetime.strptime(times, formato_fecha)
+        aa = ss - sd
+        print("ssss: {}".format(aa.days))
+        listaaa = []
+        for s in fechas:
+            aa = datetime.strptime(s, formato_fecha) - datetime.strptime(times, formato_fecha)
+            aaa = [t for t in s if aa.days < 20]
+            hh = "".join(aaa)
+            if hh:
+                data = ProductModel.find_by_date(hh)
+                #print("kenyyy: {}".format(data.json()))
+                print("aaaa: {}".format(data))
+                listaaa.append(data.json())
+                #return {"Productos por vencer": data.json()}
+
+
+            #for n in aaa:
+            #    print("xdddd: {}".format(n))
+            #print("fechasssss:  {}".format(aa.days))
+            #if aa.days < 20:
+            #    print("it is True")
+            #    aaa = [s for s in fechas if aa.days < 20]
+            #    print("asdasd: {}".format(aaa))
+           # else:
+            #    print("you are nob")
+        return {'productos': listaaa}
         
 
 
