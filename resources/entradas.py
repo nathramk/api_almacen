@@ -12,6 +12,11 @@ _entrada_parser.add_argument('detalle',
     required=True,
     help="No dberia de estar en blanco"
 )
+_entrada_parser.add_argument('nombre_proveedor',
+    type= str,
+    required=True,
+    help="cannot be blank"
+)
 
 class RegistrarEntradas(Resource):
     @jwt_required

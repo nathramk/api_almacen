@@ -6,15 +6,18 @@ class EntradasModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     detalle = db.Column(db.String(80))
     fecha_ingreso = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    nombre_proveedor = db.Column(db.String(80))
     producto = db.relationship('ProductModel', lazy='dynamic')
-    def __init__(self, detalle):
+    def __init__(self, detalle, nombre_proveedor):
         self.detalle = detalle
+        self.nombre_proveedor = nombre_proveedor
     
     def json(self):
         return {
             'id':self.id,
             'detalle':self.detalle,
             'fecha_ingreso':str(self.fecha_ingreso),
+            'nombre_proveedor': self.nombre_proveedor,
             'producto': [producto.json() for producto in self.producto.all()]
         }
     @classmethod
